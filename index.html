@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+</body>
+<script>
+    // 继承
+    function Car(color) {
+        this.color = color
+    }
+    function Bar(bar) {
+        this.bar = bar
+        this.baby = 1
+    }
+    /*
+        直接复制引用继承
+        缺点：
+            改变子会改变父
+    */
+    // Bar.prototype = Car.prototype
+    // console.dir(Bar)
+
+    /*
+        拷贝一份，然后继承
+        优点：
+            改变子不会改变父
+        缺点：
+            子容易被改写
+    */
+    // const __proto = Object.create(Car.prototype)
+    // Bar.prototype = __proto
+    // __proto.constructor = Bar
+
+    /*
+        拷贝一份，然后继承，不允许改变子
+    */
+    // Bar.prototype = Object.create(Car.prototype, {
+    //     constructor: {
+    //         value: Bar,
+    //         writable: false
+    //     }
+    // })
+    console.dir(Bar)
+</script>
+
+</html>
