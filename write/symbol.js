@@ -34,6 +34,7 @@
     // const names2 = SymbolPolyfill({
     //     a: "111"
     // })
+
     const names1 = SymbolPolyfill('111')
     const names2 = SymbolPolyfill('111')
     console.log(String(names1))
