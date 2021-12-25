@@ -13,7 +13,9 @@ const yiDeng2 = {
     b: 2
 }
 // Symbol.iterator 会在对象被for...of时调用
-yiDeng2[Symbol.iterator] = function * (hint) {
+// function * 定义一个生成器函数
+// yield：生成器的返回值
+yiDeng2[Symbol.iterator] = function* (hint) {
     const value = Object.values(yiDeng2)
     for (let i = 0; i < value.length; i++) {
         yield value[i];
@@ -22,3 +24,12 @@ yiDeng2[Symbol.iterator] = function * (hint) {
 for (let key of yiDeng2) {
     console.log(key)
 }
+
+let a = 0
+let yiDeng3 = async () => {
+    a = a + (await 10)
+    console.log(a)
+}
+yiDeng3()
+console.log(++a)
+// 1 10
