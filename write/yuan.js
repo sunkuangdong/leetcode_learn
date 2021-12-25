@@ -13,7 +13,7 @@ const yiDeng2 = {
     b: 2
 }
 // Symbol.iterator 会在对象被for...of时调用
-yiDeng2[Symbol.iterator] = function* (hint) {
+yiDeng2[Symbol.iterator] = function * (hint) {
     const value = Object.values(yiDeng2)
     for (let i = 0; i < value.length; i++) {
         yield value[i];
