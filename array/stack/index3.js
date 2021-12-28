@@ -4,7 +4,7 @@
         ● 用一个栈stack来存储入栈和出栈
         ● index指针记录出栈的那一项
         ● for pushed 入栈 stack.push(pushed[i])
-        ● while 当 stack[stack.length - 1] === popped[index] 出栈 stack.pop() index++
+        ● while 当 stack.length && stack[stack.length - 1] === popped[index] 出栈 stack.pop() index++
         ● 最后如果出完了stack.length === 0，说明完成。
         ● 如果没出完stack.length !== 0，说明出入的顺序不符条件
 */
