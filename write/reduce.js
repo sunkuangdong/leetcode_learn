@@ -17,6 +17,9 @@ Array.prototype.myReduce = function (fn, prev) {
     if (typeof arr !== 'object' && !arr.length) {
         throw new Error('myReduce is not a function')
     }
+    if (typeof fn !== 'function') {
+        throw new TypeError(`${fn} is not a function`);
+    }
     // i 从哪儿开始
     let defaultPrev = null
     let i = 0
