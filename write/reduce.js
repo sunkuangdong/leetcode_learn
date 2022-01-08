@@ -36,7 +36,7 @@ Array.prototype.myReduce = function (fn, prev) {
     // 返回结果
     for (i; i < arr.length; i++) {
         // reduce不会处理数组中null
-        if (typeof arr[i] === "object" && arr[i] !== null) {
+        if (arr[i] !== null) {
             // 调用回调函数，传递参数
             // 第一个参数 prev 第二个参数
             defaultPrev = fn.call(undefined, defaultPrev, arr[i], index = i, arr)
