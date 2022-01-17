@@ -3,7 +3,7 @@ const padding = "padding"
 const fulfilled = "fulfilled"
 const rejected = "rejected"
 // myPromise
-Function.prototype.myPromise = function (callback) {
+const myPromise = function (callback) {
     // 2. 
     // status 记录状态
     // value 记录 resolve 函数参数值
@@ -78,16 +78,75 @@ myPromise.prototype.then = function (resolve, reject) {
     // 10. 根据当前状态判断处理方式
     // 如果当前状态不是padding 
     if (this.status === fulfilled) {
-        resolve(this.value)
+        // 12. 我们的then需要返回 Promise
+        // 如果 then 的 resolve、reject 其中一个抛出异常e,则 promise2 必须拒绝执行，并返回拒因 e
+        // 如果没抛出异常，调用then外层处理好的的 resolve、reject
+        return new myPromise((thenResolve, thenReject) => {
+            try {
+                realOnFulfilled(this.value)
+            } catch (err) {
+                thenReject(err)
+            }
+        })
     }
     if (this.status === rejected) {
-        reject(this.reason)
+        return new myPromise((thenResolve, thenReject) => {
+            try {
+                realOnRejected(this.reason)
+            } catch (err) {
+                thenReject(err)
+            }
+        })
     }
+    // 11. 
     // 如果当前状态是 padding 
     // myPromise 当中应该有两个数组，存储 realOnFulfilled、realOnRejected
     // 然后在成功或者失败的阶段，遍历调用
     if (this.status === padding) {
-        this.fulfilledCallbackArray.push(realOnFulfilled)
-        this.rejectedCallbackArray.push(realOnRejected)
+        return new myPromise((thenResolve, thenReject) => {
+            this.fulfilledCallbackArray.push(() => {
+                try {
+                    realOnFulfilled(this.value)
+                } catch (err) {
+                    thenReject(err)
+                }
+            })
+            this.rejectedCallbackArray.push((thenResolve, thenReject) => {
+                try {
+                    realOnRejected(this.reason)
+                } catch (err) {
+                    thenReject(err)
+                }
+            })
+        })
     }
 }
+
+
+
+// var request = require("request");
+// var promise1 = new myPromise((resolve) => {
+//     request('https://www.baidu.com', function (error, response) {
+//         if (!error && response.statusCode == 200) {
+//             resolve('request1 success');
+//         }
+//     });
+// });
+
+// promise1.then(function (value) {
+//     console.log(value);
+// });
+
+// var promise2 = new myPromise((resolve, reject) => {
+//     request('https://www.baidu.com', function (error, response) {
+//         if (!error && response.statusCode == 200) {
+//             reject('request2 failed');
+//         }
+//     });
+// });
+
+// promise2.then(function (value) {
+//     console.log(value);
+// }, function (reason) {
+//     console.log(reason);
+// });
