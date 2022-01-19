@@ -31,8 +31,8 @@ function myPromise(callback) {
                 self.status === fulfilled
                 self.value = value
                 // 11. then 中的第一个参数：resolve 执行
-                self.fulfilledCallbackArray.forEach(itemResolve => {
-                    itemResolve(self.value)
+                self.fulfilledCallbackArray.forEach(function (itemResolve) {
+                    itemResolve(value)
                 })
             }
         })
@@ -44,8 +44,8 @@ function myPromise(callback) {
                 self.status = rejected
                 self.reason = err
                 // 12. then 中的第二个参数：reject 执行
-                self.rejectedCallbackArray.forEach(itemReject => {
-                    itemReject(self.reason)
+                self.rejectedCallbackArray.forEach(function (itemReject) {
+                    itemReject(err)
                 })
             }
         })
@@ -100,19 +100,10 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
             // 16. 模拟异步
             setTimeout(function () {
                 try {
-                    // 13. 
-                    // 如果 onFulfilled 不是函数且 reject 成功执行， promise2 必须成功执行并返回相同的值。
-                    // if (typeof onFulfilled !== 'function') {
-                    // promise2 的then 中能够接收到 resolve 的值
-                    // resolve(self.value)
-                    // } else {
-                    // promise2 的then 中能够接收到 resolve 的值
-                    // resolve(self.value)
                     // 15 
                     // realOnFulfilled 有 return 需要跳转到下一个 promise
-                    const x = realOnFulfilled(self.value)
+                    let x = realOnFulfilled(self.value)
                     resolvePromise(promise, x, resolve, reject)
-                    // }
                 } catch (err) {
                     reject(err)
                 }
@@ -124,16 +115,9 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
             // 16. 模拟异步
             setTimeout(function () {
                 try {
-                    // 14
-                    // 如果 onRejected 不是函数且 promise1 拒绝执行， promise2 必须拒绝执行并返回相同的据因。
-                    // if (typeof onRejected !== 'function') {
-                    // reject(self.reason)
-                    // } else {
                     // 15
-                    const x = realOnRejected(self.reason)
+                    let x = realOnRejected(self.reason)
                     resolvePromise(promise, x, resolve, reject)
-                    // resolve()
-                    // }
                 } catch (err) {
                     reject(err)
                 }
@@ -148,36 +132,22 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
     if (self.status === padding) {
         const promise = new myPromise(function (resolve, reject) {
             self.fulfilledCallbackArray.push(function () {
-                // 16. 模拟异步
-                setTimeout(function () {
-                    // 12
-                    try {
-                        // if (typeof onFulfilled !== 'function') {
-                        // resolve(self.value)
-                        // } else {
-                        const x = realOnFulfilled(self.value)
-                        resolvePromise(promise, x, resolve, reject)
-                        // }
-                    } catch (err) {
-                        reject(err)
-                    }
-                })
+                // 12
+                try {
+                    let x = realOnFulfilled(self.value)
+                    resolvePromise(promise, x, resolve, reject)
+                } catch (err) {
+                    reject(err)
+                }
             })
             self.rejectedCallbackArray.push(function () {
-                setTimeout(function () {
-                    // 12
-                    try {
-                        // if (typeof onRejected !== 'function') {
-                        //     reject(self.reason)
-                        // } else {
-                        // 15
-                        const x = realOnRejected(self.reason)
-                        resolvePromise(promise, x, resolve, reject)
-                        // }
-                    } catch (err) {
-                        reject(err)
-                    }
-                })
+                // 12
+                try {
+                    let x = realOnRejected(self.reason)
+                    resolvePromise(promise, x, resolve, reject)
+                } catch (err) {
+                    reject(err)
+                }
             })
         })
         return promise
