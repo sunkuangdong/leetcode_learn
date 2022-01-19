@@ -1,6 +1,4 @@
 var promisesAplusTests = require("promises-aplus-tests");
-
-
 // 1. 定义三个状态
 const padding = "padding"
 const fulfilled = "fulfilled"
@@ -62,22 +60,21 @@ function myPromise(callback) {
 // 接受两个参数
 myPromise.prototype.then = function (onFulfilled, onRejected) {
     let self = this
-    // 7. resolve 不是函数 返回一个函数
-    let realOnFulfilled = onFulfilled
-    if (typeof realOnFulfilled !== 'function') {
+    let promise2;
+    // 7. onFulfilled 不是函数 返回一个函数
+    onFulfilled =
+        typeof onFulfilled === 'function' ? onFulfilled :
         // 8. resolve 接受参数 并返回
-        realOnFulfilled = function (value) {
+        function (value) {
             return value
         }
-    }
     // 9. reject 不是函数 返回一个函数
-    let realOnRejected = onRejected
-    if (typeof realOnRejected !== 'function') {
+    onRejected =
+        typeof onRejected === 'function' ? onRejected :
         // 10. reject 接受参数 并返回
-        realOnRejected = function (reason) {
-            return reason
+        function (reason) {
+            throw reason;
         }
-    }
     /*
         如果调用方式是：
             new myPromise(fn).then(res=>{})
@@ -96,14 +93,14 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
         // 如果 then 的 resolve、reject 其中一个抛出异常e,则 promise2 必须拒绝执行，并返回拒因 e
         // 所以需要用到 try...catch, catch 捕获异常直接抛出错误
         // 没有异常 继续之前的执行
-        return promise = new myPromise(function (resolve, reject) {
+        return promise2 = new myPromise(function (resolve, reject) {
             // 16. 模拟异步
             setTimeout(function () {
                 try {
                     // 15 
-                    // realOnFulfilled 有 return 需要跳转到下一个 promise
-                    let x = realOnFulfilled(self.value)
-                    resolvePromise(promise, x, resolve, reject)
+                    // realOnFulfilled 有 return 需要跳转到下一个 promise2
+                    let x = onFulfilled(self.value)
+                    resolvePromise(promise2, x, resolve, reject)
                 } catch (err) {
                     reject(err)
                 }
@@ -111,31 +108,30 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
         })
     }
     if (self.status === rejected) {
-        const promise = new myPromise(function (resolve, reject) {
+        return promise2 = new myPromise(function (resolve, reject) {
             // 16. 模拟异步
             setTimeout(function () {
                 try {
                     // 15
-                    let x = realOnRejected(self.reason)
-                    resolvePromise(promise, x, resolve, reject)
+                    let x = onRejected(self.reason)
+                    resolvePromise(promise2, x, resolve, reject)
                 } catch (err) {
                     reject(err)
                 }
             })
         })
-        return promise
     }
     // 11. 
     // 如果当前状态是 padding 
     // myPromise 当中应该有两个数组，存储 realOnFulfilled、realOnRejected
     // 然后在成功或者失败的阶段，遍历调用
     if (self.status === padding) {
-        const promise = new myPromise(function (resolve, reject) {
+        return promise2 = new myPromise(function (resolve, reject) {
             self.fulfilledCallbackArray.push(function () {
                 // 12
                 try {
-                    let x = realOnFulfilled(self.value)
-                    resolvePromise(promise, x, resolve, reject)
+                    let x = onFulfilled(self.value)
+                    resolvePromise(promise2, x, resolve, reject)
                 } catch (err) {
                     reject(err)
                 }
@@ -143,14 +139,13 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
             self.rejectedCallbackArray.push(function () {
                 // 12
                 try {
-                    let x = realOnRejected(self.reason)
-                    resolvePromise(promise, x, resolve, reject)
+                    let x = onRejected(self.reason)
+                    resolvePromise(promise2, x, resolve, reject)
                 } catch (err) {
                     reject(err)
                 }
             })
         })
-        return promise
     }
 }
 
