@@ -6,109 +6,55 @@ const padding = "padding"
 const fulfilled = "fulfilled"
 const rejected = "rejected"
 // myPromise
-const myPromise = function (callback) {
+function myPromise(callback) {
+    let self = this;
     // 2. 
     // status 记录状态
     // value 记录 resolve 函数参数值
     // reason 记录 rejected 函数参数值
-    this.status = padding
-    this.value = null
-    this.reason = null
+    self.status = padding
+    self.value = null
+    self.reason = null
 
     // 11. 创建 成功、失败的数组，
     // 存储 then 中为 padding 状态时, then 的resolve、rejected两个函数
-    this.fulfilledCallbackArray = []
-    this.rejectedCallbackArray = []
+    self.fulfilledCallbackArray = []
+    self.rejectedCallbackArray = []
 
     // 3. resolve 函数
-    const resolve = function (value) {
-        if (this.status === padding) {
-            this.status === fulfilled
-            this.value = value
-            // 11. then 中的第一个参数：resolve 执行
-            this.fulfilledCallbackArray.forEach(itemResolve => {
-                itemResolve(this.value)
-            })
+    function resolve(value) {
+        if (value instanceof myPromise) {
+            return value.then(resolve, reject);
         }
+        setTimeout(function () {
+            if (self.status === padding) {
+                self.status === fulfilled
+                self.value = value
+                // 11. then 中的第一个参数：resolve 执行
+                self.fulfilledCallbackArray.forEach(itemResolve => {
+                    itemResolve(self.value)
+                })
+            }
+        })
     }
     // 4. rejected 函数
-    const reject = function (err) {
-        if (this.status === padding) {
-            this.status = rejected
-            this.reason = err
-            // 12. then 中的第二个参数：reject 执行
-            this.rejectedCallbackArray.forEach(itemReject => {
-                itemReject(this.reason)
-            })
-        }
+    function reject(err) {
+        setTimeout(function () {
+            if (self.status === padding) {
+                self.status = rejected
+                self.reason = err
+                // 12. then 中的第二个参数：reject 执行
+                self.rejectedCallbackArray.forEach(itemReject => {
+                    itemReject(self.reason)
+                })
+            }
+        })
     }
     // 5. 成功和失败的调用
     try {
         callback(resolve, reject)
     } catch (err) {
         reject(err)
-    }
-}
-
-// 15
-// 第15步很难，可以不写出来
-const resolvePromise = function (promise, x, resolve, reject) {
-    // 如果 promise 与 x 是同一个对象，说明 return 的是自己的 promise
-    // 死循环得报错
-    if (promise === x) {
-        return reject(new TypeError('The promise and the return value are the same'));
-    }
-    // 如果x本身为myPromise，那就递归继续then
-    if (x instanceof myPromise) {
-        x.then(function (y) {
-            // 直到结束为止
-            resolvePromise(promise, y, resolve, reject)
-        }, reject)
-    }
-    // 如果 x 是对象或者函数，需要判断x.then是否存在
-    else if (typeof x === 'function' || typeof x === 'object') {
-        // 如果x是null，应该直接resolve
-        if (x === null) {
-            return resolve(x)
-        }
-
-        let then
-        try {
-            then = x.then
-        } catch (err) {
-            return reject(err)
-        }
-        if (typeof then === 'function') {
-            let callFlag = false
-            try {
-                // then 是一个函数，需要调用，作用域是x
-                // 传递两个函数作为 resolve、reject 的回调
-                then.call(x, function (y) {
-                    // 成功或失败，其中一个调用了一次之后，都不允许再次调用
-                    // 担心return函数面返回相同的 then 调用没完
-                    if (callFlag) return;
-                    callFlag = true
-                    resolvePromise(promise, y, resolve, reject)
-                }, function (z) {
-                    // 成功或失败，其中一个调用了一次之后，都不允许再次调用
-                    // 担心return函数面返回相同的 then 调用没完
-                    if (callFlag) return;
-                    callFlag = true
-                    reject(z)
-                })
-            } catch (error) {
-                // 如果已经调用过 try 中 then 的回调，忽略这步
-                if (callFlag) return;
-                reject(error)
-            }
-
-        } else {
-            // x 不存在then，进入下一个 then 中
-            resolve(x)
-        }
-    } else {
-        // 其他情况，不管返回什么都直接进入下一个 then 中
-        resolve(x)
     }
 }
 
@@ -150,29 +96,28 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
         // 如果 then 的 resolve、reject 其中一个抛出异常e,则 promise2 必须拒绝执行，并返回拒因 e
         // 所以需要用到 try...catch, catch 捕获异常直接抛出错误
         // 没有异常 继续之前的执行
-        const promise = new myPromise(function (resolve, reject) {
+        return promise = new myPromise(function (resolve, reject) {
             // 16. 模拟异步
             setTimeout(function () {
                 try {
                     // 13. 
                     // 如果 onFulfilled 不是函数且 reject 成功执行， promise2 必须成功执行并返回相同的值。
-                    if (typeof onFulfilled !== 'function') {
-                        // promise2 的then 中能够接收到 resolve 的值
-                        resolve(self.value)
-                    } else {
-                        // promise2 的then 中能够接收到 resolve 的值
-                        // resolve(self.value)
-                        // 15 
-                        // realOnFulfilled 有 return 需要跳转到下一个 promise
-                        const x = realOnFulfilled(self.value)
-                        resolvePromise(promise, x, resolve, reject)
-                    }
+                    // if (typeof onFulfilled !== 'function') {
+                    // promise2 的then 中能够接收到 resolve 的值
+                    // resolve(self.value)
+                    // } else {
+                    // promise2 的then 中能够接收到 resolve 的值
+                    // resolve(self.value)
+                    // 15 
+                    // realOnFulfilled 有 return 需要跳转到下一个 promise
+                    const x = realOnFulfilled(self.value)
+                    resolvePromise(promise, x, resolve, reject)
+                    // }
                 } catch (err) {
                     reject(err)
                 }
             })
         })
-        return promise
     }
     if (self.status === rejected) {
         const promise = new myPromise(function (resolve, reject) {
@@ -181,14 +126,14 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
                 try {
                     // 14
                     // 如果 onRejected 不是函数且 promise1 拒绝执行， promise2 必须拒绝执行并返回相同的据因。
-                    if (typeof onRejected !== 'function') {
-                        reject(self.reason)
-                    } else {
-                        // 15
-                        const x = realOnRejected(self.reason)
-                        resolvePromise(promise, x, resolve, reject)
-                        // resolve()
-                    }
+                    // if (typeof onRejected !== 'function') {
+                    // reject(self.reason)
+                    // } else {
+                    // 15
+                    const x = realOnRejected(self.reason)
+                    resolvePromise(promise, x, resolve, reject)
+                    // resolve()
+                    // }
                 } catch (err) {
                     reject(err)
                 }
@@ -207,12 +152,12 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
                 setTimeout(function () {
                     // 12
                     try {
-                        if (typeof onFulfilled !== 'function') {
-                            resolve(self.value)
-                        } else {
-                            const x = realOnFulfilled(self.value)
-                            resolvePromise(promise, x, resolve, reject)
-                        }
+                        // if (typeof onFulfilled !== 'function') {
+                        // resolve(self.value)
+                        // } else {
+                        const x = realOnFulfilled(self.value)
+                        resolvePromise(promise, x, resolve, reject)
+                        // }
                     } catch (err) {
                         reject(err)
                     }
@@ -222,13 +167,13 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
                 setTimeout(function () {
                     // 12
                     try {
-                        if (typeof onRejected !== 'function') {
-                            reject(self.reason)
-                        } else {
-                            // 15
-                            const x = realOnRejected(self.reason)
-                            resolvePromise(promise, x, resolve, reject)
-                        }
+                        // if (typeof onRejected !== 'function') {
+                        //     reject(self.reason)
+                        // } else {
+                        // 15
+                        const x = realOnRejected(self.reason)
+                        resolvePromise(promise, x, resolve, reject)
+                        // }
                     } catch (err) {
                         reject(err)
                     }
@@ -238,6 +183,66 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
         return promise
     }
 }
+
+// 15
+// 第15步很难，可以不写出来
+function resolvePromise(promise, x, resolve, reject) {
+    let then
+    let callFlag = false
+    // 如果 promise 与 x 是同一个对象，说明 return 的是自己的 promise
+    // 死循环得报错
+    if (promise === x) {
+        return reject(new TypeError('The promise and the return value are the same'));
+    }
+    // 如果x本身为myPromise，那就递归继续then
+    if (x instanceof myPromise) {
+        // 判断当前promise状态
+        if (x.status === padding) {
+            x.then(function (y) {
+                // 直到结束为止
+                resolvePromise(promise, y, resolve, reject)
+            }, reject)
+        } else {
+            x.then(resolve, reject)
+        }
+        return
+    }
+    // 如果 x 是对象或者函数，需要判断x.then是否存在
+    if ((x !== null) && (typeof x === 'function' || typeof x === 'object')) {
+        try {
+            then = x.then
+            if (typeof then === 'function') {
+                // then 是一个函数，需要调用，作用域是x
+                // 传递两个函数作为 resolve、reject 的回调
+                then.call(x, function (y) {
+                    // 成功或失败，其中一个调用了一次之后，都不允许再次调用
+                    // 担心return函数面返回相同的 then 调用没完
+                    if (callFlag) return;
+                    callFlag = true
+                    return resolvePromise(promise, y, resolve, reject)
+                }, function (z) {
+                    // 成功或失败，其中一个调用了一次之后，都不允许再次调用
+                    // 担心return函数面返回相同的 then 调用没完
+                    if (callFlag) return;
+                    callFlag = true
+                    return reject(z)
+                })
+            } else {
+                resolve(x)
+            }
+        } catch (error) {
+            // 如果已经调用过 try 中 then 的回调，忽略这步
+            if (callFlag) return;
+            callFlag = true
+            reject(error)
+        }
+    } else {
+        // x 不存在then，进入下一个 then 中
+        resolve(x)
+    }
+}
+
+
 
 myPromise.deferred = function () {
     var result = {};
