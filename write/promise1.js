@@ -1,3 +1,8 @@
+const promisesAplusTests = require("promises-aplus-tests");
+const PENDING = "pending";
+const FULFILLED = "fulfilled";
+const REJECTED = "rejected";
+
 function myPromise(executor) {
     let self = this;
     self.status = PENDING;
@@ -144,3 +149,18 @@ function resolvePromise(promise2, x, resolve, reject) {
         resolve(x)
     }
 }
+
+myPromise.deferred = function () {
+    var result = {};
+    result.promise = new myPromise(function (resolve, reject) {
+        result.resolve = resolve;
+        result.reject = reject;
+    });
+    return result;
+}
+
+promisesAplusTests(myPromise, function (err) {
+    console.log(err)
+});
+
+module.exports = myPromise;

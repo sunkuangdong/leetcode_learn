@@ -4,6 +4,7 @@
     "request": "^2.88.2"
   },
   "scripts": {
-    "test": "promises-aplus-tests write/promise.js"
+    "test": "promises-aplus-tests write/promise.js",
+    "test1": "promises-aplus-tests write/promise1.js"
   }
 }

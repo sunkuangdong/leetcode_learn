@@ -29,11 +29,11 @@ function myPromise(callback) {
                 self.status === fulfilled
                 self.value = value
                 // 11. then 中的第一个参数：resolve 执行
-                self.fulfilledCallbackArray.forEach(function (itemResolve) {
-                    itemResolve(value)
-                })
+                for (let i = 0; i < self.fulfilledCallbackArray.length; i++) {
+                    self.fulfilledCallbackArray[i](value);
+                }
             }
-        })
+        }, 0)
     }
     // 4. rejected 函数
     function reject(err) {
@@ -42,17 +42,17 @@ function myPromise(callback) {
                 self.status = rejected
                 self.reason = err
                 // 12. then 中的第二个参数：reject 执行
-                self.rejectedCallbackArray.forEach(function (itemReject) {
-                    itemReject(err)
-                })
+                for (let i = 0; i < self.rejectedCallbackArray.length; i++) {
+                    self.rejectedCallbackArray[i](err);
+                }
             }
-        })
+        }, 0)
     }
     // 5. 成功和失败的调用
     try {
         callback(resolve, reject)
-    } catch (err) {
-        reject(err)
+    } catch (e) {
+        reject(e)
     }
 }
 
@@ -65,16 +65,16 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
     onFulfilled =
         typeof onFulfilled === 'function' ? onFulfilled :
         // 8. resolve 接受参数 并返回
-        function (value) {
-            return value
-        }
+        function (v) {
+            return v
+        };
     // 9. reject 不是函数 返回一个函数
     onRejected =
         typeof onRejected === 'function' ? onRejected :
         // 10. reject 接受参数 并返回
-        function (reason) {
-            throw reason;
-        }
+        function (r) {
+            throw r;
+        };
     /*
         如果调用方式是：
             new myPromise(fn).then(res=>{})
@@ -94,18 +94,15 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
         // 所以需要用到 try...catch, catch 捕获异常直接抛出错误
         // 没有异常 继续之前的执行
         return promise2 = new myPromise(function (resolve, reject) {
-            // 16. 模拟异步
             setTimeout(function () {
                 try {
-                    // 15 
-                    // realOnFulfilled 有 return 需要跳转到下一个 promise2
-                    let x = onFulfilled(self.value)
+                    let x = onFulfilled(self.data);
                     resolvePromise(promise2, x, resolve, reject)
-                } catch (err) {
-                    reject(err)
+                } catch (e) {
+                    reject(e);
                 }
-            })
-        })
+            }, 0)
+        });
     }
     if (self.status === rejected) {
         return promise2 = new myPromise(function (resolve, reject) {
@@ -118,7 +115,7 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
                 } catch (err) {
                     reject(err)
                 }
-            })
+            }, 0)
         })
     }
     // 11. 
@@ -127,7 +124,7 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
     // 然后在成功或者失败的阶段，遍历调用
     if (self.status === padding) {
         return promise2 = new myPromise(function (resolve, reject) {
-            self.fulfilledCallbackArray.push(function () {
+            self.fulfilledCallbackArray.push(function (value) {
                 // 12
                 try {
                     let x = onFulfilled(self.value)
@@ -136,7 +133,7 @@ myPromise.prototype.then = function (onFulfilled, onRejected) {
                     reject(err)
                 }
             })
-            self.rejectedCallbackArray.push(function () {
+            self.rejectedCallbackArray.push(function (reason) {
                 // 12
                 try {
                     let x = onRejected(self.reason)
@@ -163,9 +160,9 @@ function resolvePromise(promise, x, resolve, reject) {
     if (x instanceof myPromise) {
         // 判断当前promise状态
         if (x.status === padding) {
-            x.then(function (y) {
+            x.then(function (v) {
                 // 直到结束为止
-                resolvePromise(promise, y, resolve, reject)
+                resolvePromise(promise, v, resolve, reject)
             }, reject)
         } else {
             x.then(resolve, reject)
@@ -173,7 +170,7 @@ function resolvePromise(promise, x, resolve, reject) {
         return
     }
     // 如果 x 是对象或者函数，需要判断x.then是否存在
-    if ((x !== null) && (typeof x === 'function' || typeof x === 'object')) {
+    if ((x !== null) && (typeof x === 'object' || typeof x === 'function')) {
         try {
             then = x.then
             if (typeof then === 'function') {
@@ -199,7 +196,7 @@ function resolvePromise(promise, x, resolve, reject) {
             // 如果已经调用过 try 中 then 的回调，忽略这步
             if (callFlag) return;
             callFlag = true
-            reject(error)
+            return reject(error)
         }
     } else {
         // x 不存在then，进入下一个 then 中
@@ -255,3 +252,5 @@ promisesAplusTests(myPromise, function (err) {
 // }, function (reason) {
 //     console.log(reason);
 // });
+
+module.exports = myPromise;
